@@ -90,19 +90,136 @@ Tips:
 */
 
 import { default as promptSync } from 'prompt-sync'
+import { ClassroomManager, Student, Classroom } from './classes.js'
 const prompt = promptSync();
 
 const exitKeyword = 'quit';
+const mgr = new ClassroomManager();
 
-while(true) {
+while (true) {
     const userInput = prompt('> ');
-    console.log(`You provided ${userInput}`);
-
-    if(userInput === exitKeyword) {
-        process.exit(0);
-    }
-    else {
+    if (userInput) {
         // rest of program goes here.
-        const myArguments = userInput.split()
+        const tokens = userInput.split(' ');
+        const command = tokens[0];
+        const type = tokens[1];
+
+        switch (command) {
+            case 'new': {
+                switch (type) {
+                    case 'class': {
+                        const id = tokens[2];
+                        mgr.addClassroom(id);
+                        break;
+                    }
+                    case 'student': {
+                        const classId = tokens[2];
+                        const studentId = tokens[3];
+                        const studentGpa = parseFloat(tokens[4]);
+                        const classroom = mgr.getClassroom(classId);
+
+                        if (classroom) {
+                            classroom.addStudent(new Student(studentId, studentGpa));
+                        }
+                        else {
+                            console.log(`Classroom ${classId} does not exist.`)
+                        }
+                        break;
+                    }
+                    default: {
+                        console.log(`Unrecognized record type ${type}.`);
+                        break;
+                    }
+                }
+                break;
+            }
+            case 'get': {
+                switch (type) {
+                    case 'class': {
+                        const id = tokens[2];
+                        const classroom = mgr.getClassroom(id);
+                        if (classroom) {
+                            console.log(classroom.getSummary());
+                        }
+                        else {
+                            console.log(`Classroom ${id} does not exist.`)
+                        }
+                        break;
+                    }
+                    case 'student': {
+                        const classId = tokens[2];
+                        const studentId = tokens[3];
+                        const classroom = mgr.getClassroom(classId);
+
+                        if (classroom) {
+                            const student = classroom.getStudent(studentId);
+                            if (student) {
+                                console.log(student.getSummary());
+                            }
+                            else {
+                                console.log(`Student ${studentId} does not exist in classroom ${classId}.`)
+                            }
+                        }
+                        else {
+                            console.log(`Classroom ${classId} does not exist.`)
+                        }
+                        break;
+                    }
+                    default: {
+                        console.log(`Unrecognized record type ${type}.`);
+                        break;
+                    }
+                }
+                break;
+            }
+            case 'delete': {
+                switch (type) {
+                    case 'class': {
+                        const id = tokens[2];
+                        const classroom = mgr.getClassroom(id);
+                        if (classroom) {
+                            mgr.removeClassroom(id);
+                        }
+                        else {
+                            console.log(`Classroom ${classId} does not exist.`);
+                        }
+                        break;
+                    }
+                    case 'student': {
+                        const classId = tokens[2];
+                        const studentId = tokens[3];
+                        const classroom = mgr.getClassroom(classId);
+
+                        if (classroom) {
+                            const student = classroom.getStudent(studentId);
+
+                            if (student) {
+                                classroom.removeStudent(studentId);
+                            }
+                            else {
+                                console.log(`Student ${studentId} does not exist in classroom ${classId}.`)
+                            }
+                        }
+                        else {
+                            console.log(`Classroom ${classId} does not exist.`)
+                        }
+                        break;
+                    }
+                    default: {
+                        console.log(`Unrecognized record type ${type}.`);
+                        break;
+                    }
+                }
+                break;
+            }
+            case exitKeyword: {
+                process.exit(0);
+                break;
+            }
+            default: {
+                console.log(`Unrecognized command ${command}`);
+                break;
+            }
+        }
     }
 }
